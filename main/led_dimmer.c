@@ -19,7 +19,7 @@
 
 // ── Distance → brightness mapping ───────────────────────────────────────────
 #define DIST_FULL_BRIGHT_M  0.5f   // ≤ 0.5 m  → 100 %
-#define DIST_FULL_DIM_M     2.5f   // ≥ 2.5 m  →   0 %
+#define DIST_FULL_DIM_M     1.8f   // ≥ 1.8 m  →   0 %
 
 // ── Smoothing & timing ───────────────────────────────────────────────────────
 #define TICK_MS          50     // LED task period
