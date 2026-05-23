@@ -50,10 +50,54 @@ idf.py -p /dev/cu.YOURPORT flash monitor
 
 > To exit the monitor press **Ctrl + ]**
 
-## Key notes
+## How it works
 
-- SPI speed is set to **10 MHz** — 40 MHz causes calibration failures over breadboard wires due to signal integrity issues
-- Distance range configured: **0.25 m to 3.0 m** (balanced preset)
+### Distance → brightness mapping
+
+| Distance | Brightness |
+|----------|-----------|
+| ≤ 0.5 m  | 100%      |
+| 1.15 m   | ~50%      |
+| ≥ 1.8 m  | 0%        |
+
+When multiple distances are detected (e.g. paper lamp shade + person), the furthest reading is always used. The sensor start range is set to 0.30 m to exclude the paper shade (~10 cm away).
+
+### Perceptual brightness (gamma correction)
+
+A raw linear PWM sweep from 0→100% does not look linear to the human eye — it appears to jump quickly at low values and barely change at high values. This is because **eyes perceive brightness logarithmically**.
+
+To fix this, a gamma curve (`γ = 2.2`) is applied to the PWM duty cycle:
+
+```
+PWM duty = (brightness%)^2.2
+```
+
+This makes the lamp appear to change evenly as you move toward or away from it.
+
+### LED state machine
+
+```
+valid reading               valid reading
+      │                           │
+ ┌────▼──────┐  no reading   ┌────▼─────┐
+ │ TRACKING  │ ────────────► │ HOLDING  │
+ │           │ ◄──────────── │          │
+ └───────────┘  reading back └────┬─────┘
+                                  │ 3 s timeout
+                                  ▼
+                            ┌──────────┐
+                            │  FADING  │ → slowly → 0%
+                            └──────────┘
+```
+
+- **TRACKING**: smoothly follows distance (max 2%/50 ms tick ≈ 2.5 s full sweep)
+- **HOLDING**: no reading detected, holds current brightness for 3 s
+- **FADING**: slowly fades to off (0.5%/tick ≈ 16 s full sweep)
+
+### Key hardware notes
+
+- SPI speed is **10 MHz** — 40 MHz causes calibration failures over breadboard wires
+- Sensor range: **0.30 m to 3.0 m** (balanced preset)
 
 ## License
 

@@ -3,6 +3,8 @@
 
 #include "led_dimmer.h"
 
+#include <math.h>
+
 #include "driver/ledc.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
@@ -43,9 +45,15 @@ static int64_t           s_last_valid_ms     = 0;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
+// Gamma correction: human eyes perceive brightness logarithmically.
+// Applying powf(x, 2.2) makes the LED appear to change evenly with distance.
+#define GAMMA 2.2f
+
 static void ledc_set_brightness(float pct)
 {
-	uint32_t duty = (uint32_t)((pct / 100.0f) * 1023.0f);
+	float linear = pct / 100.0f;
+	float corrected = powf(linear, GAMMA);
+	uint32_t duty = (uint32_t)(corrected * 1023.0f);
 	ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, duty);
 	ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
 }
