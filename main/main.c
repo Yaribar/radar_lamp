@@ -9,11 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "driver/gpio.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-
-#define LED_GPIO 8
+#include "led_dimmer.h"
 
 #include "acc_definitions_a121.h"
 #include "acc_detector_distance.h"
@@ -99,8 +95,7 @@ int app_main(int argc, char *argv[])
 	(void)argv;
 	distance_detector_resources_t resources = {0};
 
-	gpio_set_direction(LED_GPIO, GPIO_MODE_OUTPUT);
-	gpio_set_level(LED_GPIO, 0);
+	led_dimmer_init();
 
 	printf("Acconeer software version %s\n", acc_version_get());
 
@@ -173,6 +168,7 @@ int app_main(int argc, char *argv[])
 		/* If "calibration needed" is indicated, the sensor needs to be recalibrated and the detector calibration updated */
 		if (result.calibration_needed)
 		{
+			led_dimmer_update(0.0f, false);
 			printf("Sensor recalibration and detector calibration update needed ... \n");
 
 			if (!do_sensor_calibration(resources.sensor, &sensor_cal_result, resources.buffer, resources.buffer_size))
@@ -192,12 +188,22 @@ int app_main(int argc, char *argv[])
 
 			printf("Sensor recalibration and detector calibration update done!\n");
 		}
+		else if (result.num_distances == 0)
+		{
+			led_dimmer_update(0.0f, false);
+		}
 		else
 		{
+			// Multiple readings possible (e.g. paper lamp + person).
+			// Always use the furthest distance — paper is always closest.
+			float max_dist = 0.0f;
+			for (uint8_t i = 0; i < result.num_distances; i++)
+			{
+				if (result.distances[i] > max_dist)
+					max_dist = result.distances[i];
+			}
 			print_distance_result(&result);
-			gpio_set_level(LED_GPIO, 1);
-			vTaskDelay(pdMS_TO_TICKS(50));
-			gpio_set_level(LED_GPIO, 0);
+			led_dimmer_update(max_dist, true);
 		}
 	}
 
@@ -235,7 +241,7 @@ static void set_config(acc_detector_distance_config_t *detector_config, distance
 			break;
 
 		case DISTANCE_PRESET_CONFIG_BALANCED:
-			acc_detector_distance_config_start_set(detector_config, 0.25f);
+			acc_detector_distance_config_start_set(detector_config, 0.30f);
 			acc_detector_distance_config_end_set(detector_config, 3.0f);
 			acc_detector_distance_config_max_step_length_set(detector_config, 0U);
 			acc_detector_distance_config_max_profile_set(detector_config, ACC_CONFIG_PROFILE_5);

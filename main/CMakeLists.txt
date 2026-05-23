@@ -1,5 +1,6 @@
 idf_component_register(
     SRCS "main.c"
+         "led_dimmer.c"
          "acc_algorithm.c"
          "acc_control_helper.c"
          "acc_hal_integration_espidf_xe121.c"
