@@ -29,12 +29,26 @@ ESP32-C3 Super Mini project that dims a lamp based on distance measured by an Ac
 Requires ESP-IDF 6.1.
 
 ```bash
+# 1. Source IDF (required every new terminal session)
 . ~/esp/esp-idf/export.sh
-cd radar_lamp
+
+# 2. Go to project
+cd ~/esp/radar_lamp
+
+# 3. Set target (only needed once or after cleaning)
 idf.py set-target esp32c3
+
+# 4. Build
 idf.py build
+
+# 5. Find your port
+ls /dev/cu.*
+
+# 6. Flash and open monitor
 idf.py -p /dev/cu.YOURPORT flash monitor
 ```
+
+> To exit the monitor press **Ctrl + ]**
 
 ## Key notes
 
