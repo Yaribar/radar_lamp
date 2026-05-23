@@ -1,0 +1,10 @@
+# IDF build output
+build/
+sdkconfig
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+*.swp
