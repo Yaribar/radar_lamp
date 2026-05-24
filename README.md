@@ -99,6 +99,36 @@ valid reading               valid reading
 - SPI speed is **10 MHz** — 40 MHz causes calibration failures over breadboard wires
 - Sensor range: **0.30 m to 3.0 m** (balanced preset)
 
+## PCB / Hardware design
+
+### Circuit overview
+
+12V barrel jack → Mini 360 step-down → 3.3V for ESP32 + XE121
+12V barrel jack → IRLZ44N MOSFET (controlled by GPIO 8 PWM) → 12V LED lamp
+
+### BOM
+
+| Component | Value | Purpose |
+|---|---|---|
+| ESP32-C3 Super Mini | — | MCU |
+| XE121 radar | — | distance sensor |
+| IRLZ44N | — | MOSFET, switches 12V lamp via PWM |
+| Mini 360 MP2307 | 12V → 3.3V | power regulation |
+| Resistor | 100Ω | MOSFET gate series — limits inrush, prevents oscillation |
+| Resistor | 10kΩ | MOSFET gate pull-down — keeps lamp off when GPIO floats on boot |
+| Capacitor | 100nF ceramic | near ESP32 3.3V pin — absorbs high-freq switching noise |
+| Barrel jack | 5.5/2.1mm | 12V input |
+| Connector | SH1.0mm 8-pin vertical | XE121 radar |
+| Connector | XH2.54 2-pin | 12V lamp output |
+| Switch | SPST | power on/off |
+
+### Notes
+- No flyback diode needed — lamp is a resistive LED load, no inductive spike
+- No fuse on board — power supply has built-in protection
+- 100µF on 12V input not needed — Mini 360 + regulated PSU covers it
+- IRLZ44N is rated 47A/55V, far above what a 12V LED lamp needs — chosen for logic-level gate compatibility with 3.3V GPIO
+- Lamp connector XH2.54 is rated for up to ~3A — verify lamp wattage stays within that (W/12V < 3A, so under 36W)
+
 ## License
 
 Acconeer source files are licensed under BSD 3-Clause. See [LICENSES/license_acconeer.txt](LICENSES/license_acconeer.txt).
