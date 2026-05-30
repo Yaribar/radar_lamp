@@ -203,7 +203,13 @@ int app_main(int argc, char *argv[])
 					max_dist = result.distances[i];
 			}
 			print_distance_result(&result);
-			led_dimmer_update(max_dist, true);
+			// If the furthest peak is beyond the dim threshold it's a static
+			// reflector (wall, furniture) — treat as no presence so the lamp
+			// fades out instead of staying on indefinitely.
+			if (max_dist >= DIST_FULL_DIM_M)
+				led_dimmer_update(0.0f, false);
+			else
+				led_dimmer_update(max_dist, true);
 		}
 	}
 

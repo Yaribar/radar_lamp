@@ -5,6 +5,9 @@
 
 #include <stdbool.h>
 
+/** Distance (m) at or beyond which no human presence is assumed (0 % brightness). */
+#define DIST_FULL_DIM_M  1.8f
+
 /**
  * @brief Initialize LEDC PWM and start the LED dimmer task.
  *        Must be called once before any other led_dimmer function.
